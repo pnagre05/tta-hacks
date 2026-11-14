@@ -36,6 +36,9 @@ The database is PGlite (real Postgres running inside Node) unless `DATABASE_URL`
 
 Remove the `DATABASE_URL` line to go back to the local database.
 
+Hosts that reserve the name `DATABASE_URL` (Replit does) can set `SUPABASE_DB_URL` instead. It takes priority
+over `DATABASE_URL` when both are set.
+
 **Demo logins:** `alex@gather.test`, `sam@gather.test`, `priya@gather.test`, `jordan@gather.test`,
 `maya@gather.test`, `chris@gather.test`. Password for all: `password123`. Invite code: `DEMO42`.
 In the seeded data, everyone is free Saturday 1–6 PM.

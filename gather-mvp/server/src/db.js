@@ -4,7 +4,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const useRemote = Boolean(process.env.DATABASE_URL);
+// SUPABASE_DB_URL takes priority. Some hosts (e.g. Replit) reserve the name DATABASE_URL, so it can't be set there.
+const databaseUrl = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+const useRemote = Boolean(databaseUrl);
 let query;
 let withTx;
 let close;
@@ -15,7 +17,7 @@ if (useRemote) {
   // Return BIGINT (COUNT/SUM) as JS numbers. The app relies on this.
   types.setTypeParser(20, (v) => Number(v));
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: databaseUrl,
     ssl: { rejectUnauthorized: false }, // Supabase and most hosted Postgres require SSL
     max: 5,
   });
