@@ -63,11 +63,11 @@ function ProposeForm({ ctx, slot, ideas, onDone }) {
       <div className="time-pick">
         <label>
           <span className="small muted">Starts</span>
-          <input type="datetime-local" value={start} min={min} max={max} step={900} onChange={(e) => setStart(e.target.value)} required />
+          <input type="datetime-local" value={start} min={min} max={max} onChange={(e) => setStart(e.target.value)} required />
         </label>
         <label>
           <span className="small muted">Ends</span>
-          <input type="datetime-local" value={end} min={min} max={max} step={900} onChange={(e) => setEnd(e.target.value)} required />
+          <input type="datetime-local" value={end} min={min} max={max} onChange={(e) => setEnd(e.target.value)} required />
         </label>
       </div>
       <div className="small muted">{tzNote}</div>

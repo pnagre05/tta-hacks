@@ -13,7 +13,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
-const { migrate, query } = require('./db');
+const { migrate, query, dbInfo } = require('./db');
 const { seed } = require('./seed');
 const { HttpError } = require('./http');
 const { requireAuth } = require('./auth');
@@ -71,6 +71,7 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
+  console.log(`Database: ${dbInfo}`);
   await migrate();
   // First run: load the demo group so there is something to log in to.
   const { rows } = await query('SELECT COUNT(*) AS n FROM users');

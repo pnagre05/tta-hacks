@@ -11,8 +11,12 @@ let query;
 let withTx;
 let close;
 let exec; // run a multi-statement SQL string with no parameters
+let dbInfo; // human-readable description for the startup log (never includes the password)
 
 if (useRemote) {
+  let host = 'unparseable url';
+  try { host = new URL(databaseUrl).host; } catch { /* leave as is */ }
+  dbInfo = `Postgres at ${host} (from ${process.env.SUPABASE_DB_URL ? 'SUPABASE_DB_URL' : 'DATABASE_URL'})`;
   const { Pool, types } = require('pg');
   // Return BIGINT (COUNT/SUM) as JS numbers. The app relies on this.
   types.setTypeParser(20, (v) => Number(v));
@@ -44,6 +48,7 @@ if (useRemote) {
     ? undefined
     : process.env.GATHER_DB_DIR || path.join(__dirname, '..', 'data', 'pgdata');
   if (dataDir) fs.mkdirSync(path.dirname(dataDir), { recursive: true });
+  dbInfo = dataDir ? `local PGlite files in ${dataDir} (NOT Supabase: no SUPABASE_DB_URL or DATABASE_URL set)` : 'in-memory PGlite';
   const db = new PGlite(dataDir);
   query = (text, params) => db.query(text, params);
   exec = (sql) => db.exec(sql);
@@ -56,4 +61,4 @@ async function migrate() {
   await exec(sql);
 }
 
-module.exports = { query, withTx, migrate, close, exec, useRemote };
+module.exports = { query, withTx, migrate, close, exec, useRemote, dbInfo };
