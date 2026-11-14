@@ -8,6 +8,7 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "seed": "node src/seed.js",
+    "supabase:setup": "node src/supabase-setup.js",
     "test": "node --test"
   },
   "engines": {
@@ -23,6 +24,7 @@
     "express-rate-limit": "^7.4.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.23.1",
     "socket.io": "^4.8.1",
     "zod": "^3.23.8"
   }

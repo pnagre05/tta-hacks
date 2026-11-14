@@ -25,8 +25,16 @@ Other ways to run:
 - **Reset the data:** `npm run reset`, then start again (it re-seeds).
 - **Re-seed manually:** `npm run seed`.
 
-The database is PGlite (real Postgres running inside Node), so the SQL is standard Postgres. To use a
-separate server such as Neon or Docker later, swap the implementation in `server/src/db.js`.
+The database is PGlite (real Postgres running inside Node) unless `DATABASE_URL` is set.
+
+### Using Supabase (or any Postgres)
+
+1. Create a Supabase project and copy the **Session pooler** connection string (Connect button).
+2. Put it in `server/.env` as `DATABASE_URL=...` (copy `server/.env.example` first; the file is gitignored).
+3. `npm run supabase:setup` creates the tables and turns on Row Level Security.
+4. `npm run seed` loads the demo group, then `npm run dev`.
+
+Remove the `DATABASE_URL` line to go back to the local database.
 
 **Demo logins:** `alex@gather.test`, `sam@gather.test`, `priya@gather.test`, `jordan@gather.test`,
 `maya@gather.test`, `chris@gather.test`. Password for all: `password123`. Invite code: `DEMO42`.
