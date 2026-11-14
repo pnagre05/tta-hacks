@@ -255,6 +255,29 @@ button.card { display: block; width: 100%; border: none; text-align: left; white
 .legend.busy { background: var(--hot); }
 .legend.google { background: var(--lilac); }
 
+/* Week navigation, month calendar and the time picker (Schedule) */
+.week-nav { gap: 8px; }
+.week-nav .strong { font: 700 1rem var(--display); text-align: center; flex: 1; }
+.month { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.month .dow { text-align: center; font-size: .720rem; font-weight: 700; color: var(--ink-soft); }
+.month button.day {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-height: 46px; padding: 3px 1px; border: none; border-radius: 12px; background: #f3eefb;
+  font-weight: 700; white-space: normal;
+}
+.month button.day .cnt { font-size: .640rem; font-weight: 600; color: var(--ink-soft); }
+.month button.day.all { background: var(--mint); }
+.month button.day.some { background: #e4f7ec; }
+.month button.day.none { background: #f6dfe8; }
+.month button.day.dim { opacity: .5; }
+.month button.day.past { background: #efeaf6; color: #a9a0bd; opacity: .6; }
+.legend.swatch-all { background: var(--mint); }
+.legend.swatch-some { background: #e4f7ec; }
+.legend.swatch-none { background: #f6dfe8; }
+.time-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.time-pick label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+@media (max-width: 420px) { .time-pick { grid-template-columns: 1fr; } }
+
 /* ---------- AI chat ---------- */
 .chat { display: flex; flex-direction: column; gap: 10px; min-height: 38vh; }
 .bubble { max-width: 86%; padding: 12px 16px; border-radius: 22px; white-space: pre-wrap; line-height: 1.450; }

@@ -81,6 +81,9 @@ const createSchema = z.object({
 
 router.post('/groups/:groupId/events', requireGroupMember, async (req, res) => {
   const body = parse(createSchema, req.body);
+  // Plans can have any start and end now, so sanity-check them.
+  if (body.end <= new Date()) throw new HttpError(400, 'That time has already passed');
+  if (body.end - body.start > 14 * 24 * 60 * 60 * 1000) throw new HttpError(400, 'A plan can be at most 14 days long');
   if (body.ideaId) {
     const { rows } = await query('SELECT 1 FROM ideas WHERE id = $1 AND group_id = $2', [body.ideaId, req.groupId]);
     if (!rows[0]) throw new HttpError(400, 'That idea is not in this group');

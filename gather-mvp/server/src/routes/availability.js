@@ -27,11 +27,25 @@ async function busyFor(userIds, from, to) {
   return rows;
 }
 
-// Busy blocks (start/end/source only) for every member over the next N days.
+const MAX_RANGE_DAYS = 62;
+
+// Busy blocks (start/end/source only) for every member.
+// Use ?from=<ISO>&to=<ISO> for an explicit range (up to 62 days), or ?days=N for "the next N days".
 router.get('/groups/:groupId/availability', requireGroupMember, async (req, res) => {
-  const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 31);
-  const from = new Date(Date.now() - DAY_MS); // include today
-  const to = new Date(Date.now() + days * DAY_MS);
+  let from;
+  let to;
+  if (req.query.from !== undefined || req.query.to !== undefined) {
+    from = new Date(String(req.query.from));
+    to = new Date(String(req.query.to));
+    if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to <= from) {
+      throw new HttpError(400, 'from and to must be valid dates, with to after from');
+    }
+    if (to - from > MAX_RANGE_DAYS * DAY_MS) throw new HttpError(400, `Range is too long (max ${MAX_RANGE_DAYS} days)`);
+  } else {
+    const days = Math.min(Math.max(Number(req.query.days) || 14, 1), 31);
+    from = new Date(Date.now() - DAY_MS); // include today
+    to = new Date(Date.now() + days * DAY_MS);
+  }
   const members = await membersOf(req.groupId);
   const busy = await busyFor(members.map((m) => m.id), from, to);
   res.json({
