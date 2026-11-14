@@ -1,0 +1,16 @@
+{
+  "name": "gather",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GATHER: friend-group scheduling, polls, Idea Bank, expenses, and an AI assistant",
+  "scripts": {
+    "setup": "npm install --prefix server && npm install --prefix client",
+    "db": "docker compose up -d db",
+    "seed": "npm run seed --prefix server",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm run build && npm start --prefix server",
+    "test": "npm test --prefix server"
+  }
+}
