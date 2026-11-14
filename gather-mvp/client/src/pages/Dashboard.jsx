@@ -3,16 +3,20 @@ import { api, fmtRange, money, timeLeft } from '../api.js';
 import { useGroupData } from '../live.js';
 import EventCard from '../components/EventCard.jsx';
 import { AvatarStack, Sticker } from '../components/ui.jsx';
+import { getZone } from '../lib/zoneState.js';
 
 function NextPlan({ event }) {
   const start = new Date(event.start);
+  const timeZone = getZone();
+  const weekday = start.toLocaleDateString(undefined, { weekday: 'short', timeZone });
+  const dayOfMonth = new Intl.DateTimeFormat(undefined, { day: 'numeric', timeZone }).format(start);
   const going = event.responses.filter((r) => r.response === 'yes').map((r) => r.name);
   const respond = (response) => api(`/events/${event.id}/respond`, { method: 'POST', body: { response } }).catch(() => {});
   return (
     <div className="card hero c-mint">
       <Sticker color="#ffe27a" size={84} tilt={10}>
-        <small>{start.toLocaleDateString(undefined, { weekday: 'short' })}</small>
-        {start.getDate()}
+        <small>{weekday}</small>
+        {dayOfMonth}
       </Sticker>
       <div className="small strong">Next up, confirmed</div>
       <div className="display">{event.title}</div>

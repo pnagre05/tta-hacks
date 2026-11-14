@@ -97,7 +97,7 @@ router.get('/groups/:groupId/slots', requireGroupMember, async (req, res) => {
     .map((b) => ({ userId: b.user_id, start: b.start_utc, end: b.end_utc }));
 
   const names = new Map(members.map((m) => [m.id, m.name]));
-  const slots = rankSlots({ members, busy, windowStart, windowEnd, timeZone: g[0].timezone, minMinutes })
+  const slots = rankSlots({ members, busy, windowStart, windowEnd, timeZone: g[0].timezone, minMinutes, limit: days })
     .map((s) => ({
       start: s.start,
       end: s.end,

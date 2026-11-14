@@ -1,4 +1,5 @@
 // Find the times when the most group members are free.
+// Result: at most one slot per day (that day's best), ordered by people free, then soonest day.
 const { localParts } = require('./time');
 
 const STEP_MS = 30 * 60 * 1000;
@@ -14,12 +15,12 @@ const STEP_MS = 30 * 60 * 1000;
  * @param {number} [opts.dayEndHour=23]  latest local hour a slot may run until
  * @param {number} [opts.minMinutes=120] shortest slot worth suggesting
  * @param {number} [opts.minFree=2]      fewest free members worth suggesting
- * @param {number} [opts.limit=10]
+ * @param {number} [opts.limit=14]       how many days to return (one slot each)
  * @returns {{start:Date,end:Date,freeCount:number,total:number,freeMemberIds:number[]}[]}
  */
 function rankSlots({
   members, busy, windowStart, windowEnd, timeZone,
-  dayStartHour = 9, dayEndHour = 23, minMinutes = 120, minFree = 2, limit = 10,
+  dayStartHour = 9, dayEndHour = 23, minMinutes = 120, minFree = 2, limit = 14,
 }) {
   const total = members.length;
   const busyByUser = new Map(members.map((m) => [m.id, []]));
@@ -61,13 +62,29 @@ function rankSlots({
   }
   closeCurrent();
 
-  return slots
-    .filter((s) => s.free.length >= Math.min(minFree, total) && s.end - s.start >= minMinutes * 60000)
-    .sort((a, b) =>
-      b.free.length - a.free.length || // most people free
-      (b.end - b.start) - (a.end - a.start) || // longest
-      a.start - b.start // soonest
-    )
+  const eligible = slots.filter(
+    (s) => s.free.length >= Math.min(minFree, total) && s.end - s.start >= minMinutes * 60000
+  );
+
+  // Keep only the best slot of each day, so a few long days can't crowd everything else out of the list.
+  const dayKey = (ms) => {
+    const p = localParts(new Date(ms), timeZone);
+    return `${p.year}-${p.month}-${p.day}`;
+  };
+  const betterWithinDay = (a, b) =>
+    b.free.length - a.free.length || // most people free
+    (b.end - b.start) - (a.end - a.start) || // longest
+    a.start - b.start; // earliest
+  const bestByDay = new Map();
+  for (const s of eligible) {
+    const k = dayKey(s.start);
+    const current = bestByDay.get(k);
+    if (!current || betterWithinDay(s, current) < 0) bestByDay.set(k, s);
+  }
+
+  // Across days: most people free first, then the soonest day.
+  return [...bestByDay.values()]
+    .sort((a, b) => b.free.length - a.free.length || a.start - b.start)
     .slice(0, limit)
     .map((s) => ({
       start: new Date(s.start),

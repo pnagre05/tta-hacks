@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { GroupForms } from './GroupSetup.jsx';
 import { Avatar } from '../components/ui.jsx';
+import { GroupZoneEditor, ZonePicker } from '../timezone.jsx';
 
 export default function Group({ ctx, groups, reloadMe, switchGroup, logout }) {
   const [copied, setCopied] = useState(false);
@@ -41,6 +42,12 @@ export default function Group({ ctx, groups, reloadMe, switchGroup, logout }) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="card stack">
+        <h3>Time zones</h3>
+        <ZonePicker id="group-page-zone" />
+        <GroupZoneEditor ctx={ctx} />
       </div>
 
       <div className="card stack">

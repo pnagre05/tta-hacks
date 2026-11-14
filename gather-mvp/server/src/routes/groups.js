@@ -63,6 +63,24 @@ router.post('/groups/join', async (req, res) => {
   res.json({ group: rows[0] });
 });
 
+const timezoneSchema = z.object({
+  timezone: z.string().max(64).refine(validTimeZone, 'Unknown time zone'),
+});
+
+// The group's time zone decides the 9 AM to 11 PM window used for suggestions, so only the owner can change it.
+router.patch('/groups/:groupId/timezone', requireGroupMember, async (req, res) => {
+  const { timezone } = parse(timezoneSchema, req.body);
+  const { rows } = await query(
+    'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+    [req.groupId, req.user.id]
+  );
+  if (rows[0]?.role !== 'owner') throw new HttpError(403, 'Only the group owner can change the time zone');
+  await query('UPDATE groups SET timezone = $1 WHERE id = $2', [timezone, req.groupId]);
+  emitGroupUpdate(req.groupId, 'group');
+  emitGroupUpdate(req.groupId, 'availability'); // suggested times depend on it
+  res.json({ ok: true, timezone });
+});
+
 router.get('/groups/:groupId', requireGroupMember, async (req, res) => {
   const { rows } = await query('SELECT id, name, invite_code, timezone FROM groups WHERE id = $1', [req.groupId]);
   const { rows: members } = await query(

@@ -274,6 +274,8 @@ button.card { display: block; width: 100%; border: none; text-align: left; white
 .legend.swatch-all { background: var(--mint); }
 .legend.swatch-some { background: #e4f7ec; }
 .legend.swatch-none { background: #f6dfe8; }
+.zone-pick { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.zone-pick select { max-width: 100%; }
 .time-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .time-pick label { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 @media (max-width: 420px) { .time-pick { grid-template-columns: 1fr; } }

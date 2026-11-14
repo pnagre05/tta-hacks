@@ -11,6 +11,7 @@ import Polls from './pages/Polls.jsx';
 import Expenses from './pages/Expenses.jsx';
 import Assistant from './pages/Assistant.jsx';
 import Group from './pages/Group.jsx';
+import { ZoneContext, useZoneChoice } from './timezone.jsx';
 
 const TABS = [
   ['home', 'Home'],
@@ -116,6 +117,8 @@ export default function App() {
 
 function GroupShell({ me, group, tab, go, toast, setToast, reloadMe, switchGroup, logout }) {
   const { data } = useGroupData(`/groups/${group.id}`, ['group', 'availability']);
+  // Which time zone times are shown in (defaults to the group's). Re-renders the whole shell when it changes.
+  const zoneState = useZoneChoice(group.id, (data?.group || group).timezone);
   // Confetti on every phone the moment a plan gets confirmed.
   const events = useGroupData(`/groups/${group.id}/events`, ['event']).data?.events;
   const seenConfirmed = useRef(null);
@@ -151,6 +154,7 @@ function GroupShell({ me, group, tab, go, toast, setToast, reloadMe, switchGroup
   }
 
   return (
+    <ZoneContext.Provider value={zoneState}>
     <div className="app">
       <header className="topbar">
         <div>
@@ -172,5 +176,6 @@ function GroupShell({ me, group, tab, go, toast, setToast, reloadMe, switchGroup
         ))}
       </nav>
     </div>
+    </ZoneContext.Provider>
   );
 }

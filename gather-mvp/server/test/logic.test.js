@@ -57,3 +57,58 @@ test('rankSlots puts the all-free slot first', () => {
   // Everything after is sorted by free count.
   for (let i = 1; i < slots.length; i++) assert.ok(slots[i - 1].freeCount >= slots[i].freeCount);
 });
+
+const TZ = 'America/Chicago';
+const dayAt = (day, h) => zonedToUtc(2026, 11, day, h, 0, TZ);
+
+test('rankSlots: a day this week outranks a longer, fully free day next week', () => {
+  // Both people are busy 9-11 on Sat Nov 21 (this week), and free all day on Sat Nov 28 (next week).
+  const members = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }];
+  const busy = [
+    { userId: 1, start: dayAt(21, 9), end: dayAt(21, 11) },
+    { userId: 2, start: dayAt(21, 9), end: dayAt(21, 11) },
+  ];
+  const slots = rankSlots({
+    members, busy, windowStart: dayAt(21, 0), windowEnd: dayAt(29, 0), timeZone: TZ, minMinutes: 120,
+  });
+  const days = slots.map((s) => localParts(s.start, TZ).day);
+  assert.strictEqual(days[0], 21, 'this week comes first even though next week is free for longer');
+  assert.ok(days.includes(28));
+  assert.strictEqual(slots[0].start.toISOString(), dayAt(21, 11).toISOString());
+});
+
+test('rankSlots returns at most one slot per day', () => {
+  const members = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }];
+  // Person A is busy 12-14 each day, which splits each day into two free blocks.
+  const busy = [21, 22, 23].map((d) => ({ userId: 1, start: dayAt(d, 12), end: dayAt(d, 14) }));
+  const slots = rankSlots({
+    members, busy, windowStart: dayAt(21, 0), windowEnd: dayAt(24, 0), timeZone: TZ, minMinutes: 120,
+  });
+  const days = slots.map((s) => localParts(s.start, TZ).day);
+  assert.strictEqual(new Set(days).size, days.length, 'no day appears twice');
+  assert.strictEqual(slots.length, 3);
+});
+
+test('rankSlots: within a day, more people free beats a longer slot', () => {
+  const members = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }];
+  // C is busy from 12 on, so 9-12 has all three free and 12-23 has only two.
+  const busy = [{ userId: 3, start: dayAt(21, 12), end: dayAt(21, 23) }];
+  const slots = rankSlots({
+    members, busy, windowStart: dayAt(21, 0), windowEnd: dayAt(22, 0), timeZone: TZ, minMinutes: 120,
+  });
+  assert.strictEqual(slots.length, 1);
+  assert.strictEqual(slots[0].freeCount, 3);
+  assert.strictEqual(slots[0].start.toISOString(), dayAt(21, 9).toISOString());
+});
+
+test('rankSlots: a day with more people free comes before an earlier day with fewer', () => {
+  const members = [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }];
+  // On the 21st, person C is busy all day. On the 22nd, everyone is free.
+  const busy = [{ userId: 3, start: dayAt(21, 9), end: dayAt(21, 23) }];
+  const slots = rankSlots({
+    members, busy, windowStart: dayAt(21, 0), windowEnd: dayAt(23, 0), timeZone: TZ, minMinutes: 120,
+  });
+  assert.strictEqual(slots[0].freeCount, 3);
+  assert.strictEqual(localParts(slots[0].start, TZ).day, 22);
+  assert.strictEqual(localParts(slots[1].start, TZ).day, 21);
+});

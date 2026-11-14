@@ -18,10 +18,11 @@ let base;
 let cookie;
 let groupId;
 
-async function call(path, { method = 'GET', body } = {}) {
+async function call(path, { method = 'GET', body, as } = {}) {
+  const session = as ?? cookie; // `as` lets a test act as a different logged-in user
   const res = await fetch(base + path, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(cookie ? { Cookie: cookie } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(session ? { Cookie: session } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   let json = null;
@@ -107,6 +108,27 @@ test('events: any future time is accepted, and bad times are rejected', async ()
   const long = await call(path, { method: 'POST', body: { title: 'Forever', start: start.toISOString(), end: new Date(start.getTime() + 15 * DAY).toISOString() } });
   assert.strictEqual(long.status, 400);
   assert.match(long.body.error, /14 days/);
+});
+
+test('group time zone: only the owner can change it, and it must be valid', async () => {
+  const login = await call('/api/auth/login', { method: 'POST', body: { email: 'sam@gather.test', password: 'password123' } });
+  const samCookie = login.headers.getSetCookie()[0].split(';')[0];
+  const path = `/api/groups/${groupId}/timezone`;
+
+  const denied = await call(path, { method: 'PATCH', body: { timezone: 'Asia/Tokyo' }, as: samCookie });
+  assert.strictEqual(denied.status, 403);
+
+  const bad = await call(path, { method: 'PATCH', body: { timezone: 'Mars/Olympus' } });
+  assert.strictEqual(bad.status, 400);
+
+  const ok = await call(path, { method: 'PATCH', body: { timezone: 'Asia/Tokyo' } });
+  assert.strictEqual(ok.status, 200);
+  const group = await call(`/api/groups/${groupId}`);
+  assert.strictEqual(group.body.group.timezone, 'Asia/Tokyo');
+  const slots = await call(`/api/groups/${groupId}/slots`);
+  assert.strictEqual(slots.body.timezone, 'Asia/Tokyo');
+
+  await call(path, { method: 'PATCH', body: { timezone: 'America/Chicago' } }); // put it back for later tests
 });
 
 test('another group is still off limits', async () => {

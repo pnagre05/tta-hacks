@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useGroupData } from '../live.js';
+import { useZone } from '../timezone.jsx';
 import {
-  MAX_WEEKS, addDays, bestFreeCount, busyByUser, daysBetween, monthDays, startOfDay,
+  MAX_WEEKS, addDays, bestFreeCount, busyByUser, cellTime, daysBetween, monthDays, startOfDay,
 } from '../lib/calendar.js';
 
 const MAX_MONTH_OFFSET = 3;
@@ -10,14 +11,15 @@ const DOW = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 // A month at a glance: each day shows the most people who are free together for 2+ hours.
 // Click a day to jump the weekly grid to it.
 export default function MonthCalendar({ ctx, base, onPickDay }) {
+  const { zone } = useZone();
   const [offset, setOffset] = useState(0);
   const month = useMemo(() => new Date(base.getFullYear(), base.getMonth() + offset, 1), [base, offset]);
   const days = useMemo(() => monthDays(month.getFullYear(), month.getMonth()), [month]);
 
-  const from = days[0];
-  const to = addDays(days[days.length - 1], 1);
+  const from = new Date(cellTime(days[0], 0, 0, zone)).toISOString();
+  const to = new Date(cellTime(addDays(days[days.length - 1], 1), 0, 0, zone)).toISOString();
   const { data, error } = useGroupData(
-    `/groups/${ctx.groupId}/availability?from=${encodeURIComponent(from.toISOString())}&to=${encodeURIComponent(to.toISOString())}`,
+    `/groups/${ctx.groupId}/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
     ['availability']
   );
 
@@ -26,8 +28,8 @@ export default function MonthCalendar({ ctx, base, onPickDay }) {
     if (!data) return null;
     const ids = data.members.map((m) => m.id);
     const byUser = busyByUser(ids, data.busy);
-    return new Map(days.map((d) => [d.getTime(), bestFreeCount(d, ids, byUser)]));
-  }, [data, days]);
+    return new Map(days.map((d) => [d.getTime(), bestFreeCount(d, ids, byUser, 120, zone)]));
+  }, [data, days, zone]);
 
   const lastPickable = addDays(base, MAX_WEEKS * 7 - 1);
 

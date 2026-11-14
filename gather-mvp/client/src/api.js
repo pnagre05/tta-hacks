@@ -1,3 +1,5 @@
+import { getZone } from './lib/zoneState.js';
+
 // Every request goes through here. The session lives in an httpOnly cookie the browser sends automatically.
 export async function api(path, { method = 'GET', body } = {}) {
   const res = await fetch(`/api${path}`, {
@@ -24,16 +26,20 @@ export async function api(path, { method = 'GET', body } = {}) {
 export const money = (cents) =>
   `${cents < 0 ? '-' : ''}$${(Math.abs(cents) / 100).toFixed(2)}`;
 
+// Times are shown in the zone chosen on the Schedule or Group page (see timezone.jsx).
 export function fmtRange(start, end) {
+  const timeZone = getZone();
   const s = new Date(start);
   const e = new Date(end);
-  const day = s.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-  const t = (d) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  const day = s.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', timeZone });
+  const t = (d) => d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', timeZone });
   return `${day}, ${t(s)} – ${t(e)}`;
 }
 
 export function fmtWhen(date) {
-  return new Date(date).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  return new Date(date).toLocaleString(undefined, {
+    weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZone: getZone(),
+  });
 }
 
 export function timeLeft(date) {
