@@ -25,22 +25,6 @@ CREATE TABLE IF NOT EXISTS group_members (
   PRIMARY KEY (group_id, user_id)
 );
 
--- Only an encrypted refresh token is stored. No event titles, ever.
-CREATE TABLE IF NOT EXISTS calendar_connections (
-  user_id                 INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-  provider                TEXT NOT NULL DEFAULT 'google',
-  encrypted_refresh_token TEXT NOT NULL,
-  connected_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_synced_at          TIMESTAMPTZ
-);
-
--- One-time OAuth "state" values (CSRF protection), valid for 10 minutes.
-CREATE TABLE IF NOT EXISTS oauth_states (
-  state      TEXT PRIMARY KEY,
-  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  expires_at TIMESTAMPTZ NOT NULL
-);
-
 -- Busy time only (start/end). Availability belongs to a user, shared with their groups.
 CREATE TABLE IF NOT EXISTS availability (
   id        SERIAL PRIMARY KEY,

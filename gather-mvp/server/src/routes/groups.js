@@ -66,10 +66,9 @@ router.post('/groups/join', async (req, res) => {
 router.get('/groups/:groupId', requireGroupMember, async (req, res) => {
   const { rows } = await query('SELECT id, name, invite_code, timezone FROM groups WHERE id = $1', [req.groupId]);
   const { rows: members } = await query(
-    `SELECT u.id, u.name, gm.role, (cc.user_id IS NOT NULL) AS calendar_connected
+    `SELECT u.id, u.name, gm.role, false AS calendar_connected
        FROM group_members gm
        JOIN users u ON u.id = gm.user_id
-       LEFT JOIN calendar_connections cc ON cc.user_id = u.id
       WHERE gm.group_id = $1 ORDER BY gm.joined_at`,
     [req.groupId]
   );

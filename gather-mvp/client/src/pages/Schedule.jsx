@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { api, fmtRange } from '../api.js';
 import { useGroupData } from '../live.js';
 import AvailabilityGrid from '../components/AvailabilityGrid.jsx';
-import CalendarConnect from '../components/CalendarConnect.jsx';
 import EventCard from '../components/EventCard.jsx';
 import { AvatarStack } from '../components/ui.jsx';
 
@@ -89,7 +88,6 @@ export default function Schedule({ ctx }) {
         <div className="stack">{upcoming.map((e) => <EventCard key={e.id} event={e} />)}</div>
       </section>
 
-      <CalendarConnect />
       <AvailabilityGrid ctx={ctx} />
     </div>
   );

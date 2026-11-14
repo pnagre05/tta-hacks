@@ -7,22 +7,26 @@ and splits the bill. Everyone's phone updates live.
 
 ## Run it (about 5 minutes)
 
-Needs Node 20+ and Docker.
+Needs Node 20+. No Docker, no database install, no accounts, no `.env`.
 
 ```bash
-npm run setup                  # install server + client packages
-npm run db                     # start Postgres in Docker (port 5432)
-cp server/.env.example server/.env
-# edit server/.env: set JWT_SECRET and TOKEN_ENCRYPTION_KEY (command is in the file)
-npm run seed                   # demo group "Weekend Crew"
+npm run setup                  # install root, server and client packages (once)
+npm run dev                    # starts the server and the client together
 ```
 
-Then pick one:
+Open `http://localhost:5173`. The first start creates a local database in `server/data/` and loads the
+demo group "Weekend Crew" automatically.
 
-- **Demo / phones on Wi-Fi:** `npm start`. This builds the React app and serves everything from one port.
-  The server prints a `http://192.168.x.x:4000` address; open it on any phone on the same Wi-Fi.
-- **Developing:** run `npm run dev:server` and `npm run dev:client` in two terminals, then open
-  `http://localhost:5173` (phones: the `Network:` address Vite prints). Code changes reload automatically.
+Other ways to run:
+
+- **One port (demo / phones on Wi-Fi):** `npm start`. This builds the React app and serves everything from
+  one port. The server prints a `http://192.168.x.x:4000` address; open it on any phone on the same Wi-Fi.
+- **Two terminals:** `npm run dev:server` and `npm run dev:client`.
+- **Reset the data:** `npm run reset`, then start again (it re-seeds).
+- **Re-seed manually:** `npm run seed`.
+
+The database is PGlite (real Postgres running inside Node), so the SQL is standard Postgres. To use a
+separate server such as Neon or Docker later, swap the implementation in `server/src/db.js`.
 
 **Demo logins:** `alex@gather.test`, `sam@gather.test`, `priya@gather.test`, `jordan@gather.test`,
 `maya@gather.test`, `chris@gather.test`. Password for all: `password123`. Invite code: `DEMO42`.
@@ -30,22 +34,10 @@ In the seeded data, everyone is free Saturday 1–6 PM.
 
 Run `npm test` for the logic tests: the slot ranking, expense split, and settle-up math.
 
-## Google Calendar setup
+## Google Calendar
 
-Google only sends people back to `https` or `localhost` addresses after sign-in, never to a LAN IP.
-So the sign-in callback goes through a free HTTPS tunnel.
-
-1. At console.cloud.google.com, create a project and enable the **Google Calendar API**.
-2. Set up the OAuth consent screen: **External**, left in **Testing** mode. Add every friend's Gmail as a **test user**.
-3. Run a tunnel to the server: `ngrok http 4000` (or `cloudflared tunnel --url http://localhost:4000`).
-4. Create an OAuth client (type **Web application**). Add the authorized redirect URI
-   `https://<tunnel-address>/api/calendar/callback`.
-5. In `server/.env`, set `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_REDIRECT_URI` (the same URI as step 4).
-   Set `APP_URL` to the address people open the app on, e.g. `http://192.168.1.20:4000`. Restart the server.
-
-Members then tap **Connect Google Calendar** on the Schedule tab. The scope requested is only
-`calendar.events.freebusy`. GATHER stores busy start and end times, never event names. **Disconnect**
-revokes Google's access and deletes those times. Without Google set up, the availability grid works fully offline.
+Removed from the local build to keep it simple. Availability is entered by hand in the Schedule tab's grid.
+The Google integration (OAuth, free/busy sync, encrypted refresh tokens) can be re-added from git history.
 
 ## GATHER AI
 

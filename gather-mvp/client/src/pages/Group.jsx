@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import CalendarConnect from '../components/CalendarConnect.jsx';
 import { GroupForms } from './GroupSetup.jsx';
 import { Avatar } from '../components/ui.jsx';
 
@@ -44,8 +43,6 @@ export default function Group({ ctx, groups, reloadMe, switchGroup, logout }) {
         </div>
       </div>
 
-      <CalendarConnect />
-
       <div className="card stack">
         <h3>Your groups</h3>
         {groups.map((gr) => (
@@ -62,8 +59,8 @@ export default function Group({ ctx, groups, reloadMe, switchGroup, logout }) {
       <div className="card stack">
         <h3>Privacy</h3>
         <p className="small muted">
-          Only members of this group can see its plans, ideas, polls, and expenses. From Google Calendar, GATHER
-          stores only when you're busy, never what you're doing. Disconnecting deletes those busy times.
+          Only members of this group can see its plans, ideas, polls, and expenses. GATHER stores only when
+          you're busy, never what you're doing.
         </p>
         <p className="small muted">Signed in as {ctx.user.email}</p>
         <button className="danger" onClick={logout}>Log out</button>

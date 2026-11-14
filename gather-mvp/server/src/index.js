@@ -1,4 +1,9 @@
 require('dotenv').config();
+// Local defaults so no .env is needed. Set JWT_SECRET in server/.env for anything beyond local testing.
+if (!process.env.JWT_SECRET) {
+  process.env.JWT_SECRET = 'local-dev-secret-not-for-production';
+  console.warn('JWT_SECRET not set: using a local development default.');
+}
 const http = require('http');
 const os = require('os');
 const fs = require('fs');
@@ -8,13 +13,13 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
-const { migrate } = require('./db');
+const { migrate, query } = require('./db');
+const { seed } = require('./seed');
 const { HttpError } = require('./http');
 const { requireAuth } = require('./auth');
 const { initRealtime } = require('./realtime');
 
 const authRoutes = require('./routes/auth');
-const calendarRoutes = require('./routes/calendar');
 const groupRoutes = require('./routes/groups');
 const availabilityRoutes = require('./routes/availability');
 const { router: eventRoutes } = require('./routes/events');
@@ -42,7 +47,6 @@ app.use('/api', rateLimit({ windowMs: 60 * 1000, limit: 300, standardHeaders: tr
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', authRoutes);
-app.use('/api', calendarRoutes); // handles its own auth (the Google callback can't require a cookie)
 
 // Everything below needs a logged-in user.
 app.use('/api', requireAuth, groupRoutes, availabilityRoutes, eventRoutes, ideaRoutes, pollRoutes, expenseRoutes, aiRoutes);
@@ -67,8 +71,10 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  if (!process.env.JWT_SECRET) throw new Error('Set JWT_SECRET in server/.env (see .env.example)');
   await migrate();
+  // First run: load the demo group so there is something to log in to.
+  const { rows } = await query('SELECT COUNT(*) AS n FROM users');
+  if (rows[0].n === 0) await seed();
   const server = http.createServer(app);
   initRealtime(server);
   startPollSweeper();

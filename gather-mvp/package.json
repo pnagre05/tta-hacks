@@ -4,13 +4,17 @@
   "private": true,
   "description": "GATHER: friend-group scheduling, polls, Idea Bank, expenses, and an AI assistant",
   "scripts": {
-    "setup": "npm install --prefix server && npm install --prefix client",
-    "db": "docker compose up -d db",
+    "setup": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev:server\" \"npm run dev:client\"",
     "seed": "npm run seed --prefix server",
+    "reset": "node -e \"require('fs').rmSync('server/data',{recursive:true,force:true});console.log('Local database deleted. It is re-seeded on next start.')\"",
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "build": "npm run build --prefix client",
     "start": "npm run build && npm start --prefix server",
     "test": "npm test --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
   }
 }

@@ -2,7 +2,7 @@
 // Run with: npm run seed   (log in as alex@gather.test / password123, invite code DEMO42)
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const { pool, query, migrate } = require('./db');
+const { query, migrate, close } = require('./db');
 const { zonedToUtc, localParts } = require('./lib/time');
 const { equalSplit } = require('./lib/settle');
 
@@ -124,9 +124,13 @@ async function main() {
   console.log(`Password for all: ${PASSWORD}`);
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => pool.end());
+module.exports = { seed: main };
+
+if (require.main === module) {
+  main()
+    .catch((err) => {
+      console.error(err);
+      process.exitCode = 1;
+    })
+    .finally(() => close());
+}

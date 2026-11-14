@@ -1,5 +1,17 @@
+# Dependencies
 node_modules/
+
+# Local database and secrets
+server/data/
 .env
+.env.*
+!.env.example
+
+# Build output
 client/dist/
-.DS_Store
+
+# Logs and OS files
 *.log
+npm-debug.log*
+.DS_Store
+Thumbs.db

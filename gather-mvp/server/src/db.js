@@ -1,35 +1,34 @@
+// Local database: PGlite (real Postgres compiled to WASM) running inside Node.
+// No Docker, no server to install, no accounts. Data is stored in server/data/ and survives restarts.
+// Set GATHER_DB=memory for a throwaway in-memory database (used by tests).
 const fs = require('fs');
 const path = require('path');
-const { Pool, types } = require('pg');
+const { PGlite } = require('@electric-sql/pglite');
 
-// Return BIGINT (e.g. COUNT/SUM) as JS numbers. Safe at our scale.
-types.setTypeParser(20, (v) => Number(v));
+const dataDir = process.env.GATHER_DB === 'memory'
+  ? undefined
+  : process.env.GATHER_DB_DIR || path.join(__dirname, '..', 'data', 'pgdata');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+if (dataDir) fs.mkdirSync(path.dirname(dataDir), { recursive: true });
+
+const db = new PGlite(dataDir);
 
 function query(text, params) {
-  return pool.query(text, params);
+  return db.query(text, params);
 }
 
-// Run fn(client) inside a transaction.
-async function withTx(fn) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await fn(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (err) {
-    await client.query('ROLLBACK');
-    throw err;
-  } finally {
-    client.release();
-  }
+// Run fn(tx) inside a transaction. tx.query(text, params) works like query().
+function withTx(fn) {
+  return db.transaction((tx) => fn(tx));
 }
 
 async function migrate() {
   const sql = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
-  await pool.query(sql);
+  await db.exec(sql);
 }
 
-module.exports = { pool, query, withTx, migrate };
+function close() {
+  return db.close();
+}
+
+module.exports = { query, withTx, migrate, close };

@@ -60,11 +60,7 @@ router.get('/me', requireAuth, async (req, res) => {
       WHERE gm.user_id = $1 ORDER BY gm.joined_at`,
     [req.user.id]
   );
-  const { rows: cal } = await query(
-    'SELECT connected_at, last_synced_at FROM calendar_connections WHERE user_id = $1',
-    [req.user.id]
-  );
-  res.json({ user: req.user, groups, calendar: cal[0] || null });
+  res.json({ user: req.user, groups, calendar: null });
 });
 
 module.exports = router;
